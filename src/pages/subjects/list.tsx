@@ -1,7 +1,7 @@
 import React, {useMemo, useState} from 'react'
 import {ListView} from "@/components/refine-ui/views/list-view.tsx";
 import {Breadcrumb} from "@/components/refine-ui/layout/breadcrumb.tsx";
-import {Badge, Search} from "lucide-react";
+import {Search} from "lucide-react";
 import {Input} from "@/components/ui/input.tsx";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
 import {DEPARTMENT_OPTIONS} from "@/constants";
@@ -10,10 +10,18 @@ import {DataTable} from "@/components/refine-ui/data-table/data-table.tsx";
 import {useTable} from "@refinedev/react-table";
 import {Subject} from "@/types";
 import {ColumnDef} from "@tanstack/react-table";
+import {Badge} from "@/components/ui/badge.tsx";
 
 const SubjectsList = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedDepartment, setSelectedDepartment] = useState('all');
+
+    const departmentFilters = selectedDepartment === 'all' ? []: [
+        {field: 'department', operator: 'eq'as const, value: selectedDepartment}
+    ];
+    const searchFilters = searchQuery ? [
+        {field: 'name', operator: 'contains'as const, value: searchQuery}
+    ] : [];
 
     const subjectsTable = useTable<Subject>({
         columns: useMemo<ColumnDef<Subject>[]>(() => [
@@ -42,14 +50,21 @@ const SubjectsList = () => {
                 size: 300,
                 header: () => <p className="column-title">Description</p>,
                 cell: ({ getValue }) => <span
-                    className="truncate line-clamp-2">{getValue<String>()}</span>,}
+                    className="truncate line-clamp-2">{getValue<String>()}</span>,
+            }
 
         ], []),
         refineCoreProps: {
             resource: 'subjects',
             pagination: {pageSize: 10, mode: 'server'},
-            filters: {},
-            sorters: {},
+            filters: {
+                permanent: [...departmentFilters, ...searchFilters]
+            },
+            sorters: {
+                initial: [
+                    { field: 'id', order: 'desc'}
+                ]
+            },
         }
     });
 
